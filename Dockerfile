@@ -11,7 +11,7 @@ ENV NODE_ENV production
 COPY package*.json /app/
 
 # Install app dependencies
-RUN npm install --production
+RUN npm install --omit=dev
 
 # Bundle app source
 COPY . /app
