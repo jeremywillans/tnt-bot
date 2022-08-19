@@ -1,17 +1,17 @@
 const Framework = require('webex-node-bot-framework');
 const webhook = require('webex-node-bot-framework/webhook');
-const debug = require('debug')('tnt:app');
 const dotenv = require('dotenv');
 const express = require('express');
+const logger = require('./logger')('app');
 
 let config;
 // Load Config
 try {
   // Try Load from ENV
   if (process.env.TOKEN) {
-    debug('Load from ENV');
+    logger.debug('Load from ENV');
   } else {
-    debug('Load from .env');
+    logger.debug('Load from .env');
     dotenv.config();
   }
   config = {
@@ -27,7 +27,7 @@ try {
       process.env.SECRET || 'replace-me-with-a-secret-string';
   }
 } catch (error) {
-  debug(`Error: ${error}`);
+  logger.error(`Error: ${error}`);
 }
 
 let app;
@@ -43,17 +43,18 @@ framework.start();
 
 // Framework Initialized
 framework.on('initialized', () => {
-  debug('Framework initialized successfully! [Press CTRL-C to quit]');
+  logger.debug('Framework initialized successfully! [Press CTRL-C to quit]');
 });
 
 function removeRoom(bot) {
-  debug('initiate removeRoom');
+  logger.debug('initiate removeRoom');
   if (bot.room.isLocked && !bot.isModerator) {
     bot.exit()
       .catch();
     return;
   }
   bot.framework.webex.rooms.remove(bot.room.id)
+    .then(logger.debug({ message: `action=delete roomId=${bot.room.id}`, labels: { type: 'event' } }))
     .catch();
 }
 
@@ -61,6 +62,7 @@ function triggerRemove(bot) {
   if (bot.room.type !== 'group') {
     return;
   }
+  logger.debug('initiate triggerRemove');
   if (bot.room.isLocked && !bot.isModerator) {
     bot.exit()
       .catch();
@@ -87,10 +89,10 @@ framework.on('spawn', (bot, _id, addedBy) => {
   if (!addedBy) {
     // don't say anything here or your bots spaces will get
     // spammed every time your server is restarted
-    debug(`Execute spawn in existing space called: ${bot.room.title}`);
+    logger.debug(`Execute spawn in existing space called: ${bot.room.title}`);
     triggerRemove(bot);
   } else {
-    debug('new room');
+    logger.debug('new room');
     // addedBy is the ID of the user who just added our bot to a new space,
     if (bot.room.type === 'group') {
       if (bot.isTeam) {
@@ -115,13 +117,13 @@ framework.on('spawn', (bot, _id, addedBy) => {
 
 // Bot Added Moderator Event
 framework.on('botAddedAsModerator', (bot) => {
-  debug('trigger botModAdd');
+  logger.debug('trigger botModAdd');
   triggerRemove(bot);
 });
 
 // Bot Removed Moderator Event
 framework.on('botRemovedAsModerator', (bot) => {
-  debug('trigger botModRem');
+  logger.debug('trigger botModRem');
   // If room is still moderated, exit.
   if (bot.room.isLocked) {
     bot.exit()
@@ -137,13 +139,13 @@ if (config.webhookUrl) {
 
   // Start Express Server
   server = app.listen(config.port, () => {
-    debug(`Framework listening on port ${config.port}`);
+    logger.debug(`Framework listening on port ${config.port}`);
   });
 }
 
 // Gracefully Shutdown (CTRL+C)
 process.on('SIGINT', () => {
-  debug('Stopping...');
+  logger.debug('Stopping...');
   if (config.webhookUrl) {
     server.close();
   }
