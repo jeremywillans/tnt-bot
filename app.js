@@ -65,10 +65,19 @@ function triggerRemove(bot) {
     return;
   }
 
+  if (bot.isTeam) {
+    bot.say('Sorry, I don\'t work in Team Spaces due to API limitations.');
+    setTimeout(() => {
+      bot.exit()
+        .catch();
+    }, 5000);
+    return;
+  }
+
   bot.say('🚨 <@all> 🚨\n\n This space will be deleted in 60 seconds! 🧨 💥 \n\nIf this is incorrect, please remove me from this space!')
     .then(setTimeout(() => {
       removeRoom(bot);
-    }, 10000));
+    }, 60000));
 }
 
 // Handle Spawn Event
@@ -82,6 +91,14 @@ framework.on('spawn', (bot, _id, addedBy) => {
     debug('new room');
     // addedBy is the ID of the user who just added our bot to a new space,
     if (bot.room.type === 'group') {
+      if (bot.isTeam) {
+        bot.say(`Sorry <@personId:${addedBy}>, I don't work in Team Spaces due to API limitations.`);
+        setTimeout(() => {
+          bot.exit()
+            .catch();
+        }, 5000);
+        return;
+      }
       // Check for Moderation Status
       if (bot.room.isLocked && !bot.isModerator) {
         bot.say(`<@personId:${addedBy}>, This space is moderated.. please assign me as moderator to initiate detonation!`);
