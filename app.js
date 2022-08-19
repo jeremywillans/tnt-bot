@@ -35,7 +35,7 @@ framework.start();
 
 // Framework Initialized
 framework.on('initialized', () => {
-  logger.debug('Framework initialized successfully! [Press CTRL-C to quit]');
+  logger.info('Framework initialized successfully! [Press CTRL-C to quit]');
 });
 
 function removeRoom(bot) {
