@@ -1,19 +1,11 @@
 const Framework = require('webex-node-bot-framework');
 const webhook = require('webex-node-bot-framework/webhook');
-const dotenv = require('dotenv');
 const express = require('express');
 const logger = require('./logger')('app');
 
 let config;
 // Load Config
 try {
-  // Try Load from ENV
-  if (process.env.TOKEN) {
-    logger.debug('Load from ENV');
-  } else {
-    logger.debug('Load from .env');
-    dotenv.config();
-  }
   config = {
     token: process.env.TOKEN,
     // removeDeviceRegistrationsOnStart: true,
@@ -79,7 +71,7 @@ function triggerRemove(bot) {
     return;
   }
 
-  bot.say('🚨 <@all> 🚨\n\n This space will be deleted in 60 seconds! 🧨 💥 \n\nIf this is incorrect, please remove me from this space!')
+  bot.say('🚨 <@all> 🚨\n\n This space will be deleted in 60 seconds! 🧨 💥 \n\nIf this is incorrect, please remove me from this space **NOW**!')
     .then(setTimeout(() => {
       removeRoom(bot);
     }, 60000));
@@ -139,6 +131,20 @@ framework.on('botRemovedAsModerator', (bot) => {
     bot.exit()
       .catch();
   }
+});
+
+// Process Messages
+framework.hears(/.*/gim, async (bot, trigger) => {
+  logger.debug('trigger hears');
+  const person = await bot.framework.webex.people.get(trigger.person.id);
+  let identifier = person.displayName;
+  // Use @mention if group space
+  if (bot.isGroup) {
+    identifier = `<@personId:${trigger.person.id}>`;
+  }
+  const message = `Hello ${identifier}!\n\nI am a simple bot used to automatically delete spaces.\nSimply add me to a group space to initiate the destruction!\n\nIf interested, you can find the source code [here](https://github.com/jeremywillans/tnt-bot)!`;
+  // Send Message
+  bot.say(message);
 });
 
 let server;
