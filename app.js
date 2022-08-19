@@ -111,8 +111,6 @@ framework.on('spawn', async (bot, _id, addedBy) => {
         return;
       }
       triggerRemove(bot);
-    } else {
-      bot.say('Hello!');
     }
   }
 });
