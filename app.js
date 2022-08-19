@@ -58,7 +58,9 @@ function removeRoom(bot) {
 }
 
 function triggerRemove(bot) {
-  debug('initiate triggerRemove');
+  if (bot.room.type !== 'group') {
+    return;
+  }
   if (bot.room.isLocked && !bot.isModerator) {
     bot.exit()
       .catch();
