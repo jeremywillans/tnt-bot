@@ -71,6 +71,7 @@ function triggerRemove(bot) {
 
   if (bot.isTeam) {
     bot.say('Sorry, I don\'t work in Team Spaces due to API limitations.');
+    logger.debug('skip team space.. leaving');
     setTimeout(() => {
       bot.exit()
         .catch();
@@ -85,14 +86,23 @@ function triggerRemove(bot) {
 }
 
 // Handle Spawn Event
-framework.on('spawn', (bot, _id, addedBy) => {
+framework.on('spawn', async (bot, _id, addedBy) => {
   if (!addedBy) {
     // don't say anything here or your bots spaces will get
     // spammed every time your server is restarted
     logger.debug(`Execute spawn in existing space called: ${bot.room.title}`);
     triggerRemove(bot);
   } else {
-    logger.debug('new room');
+    let userRef = addedBy;
+    try {
+      // Capture Reporter
+      const person = await bot.framework.webex.people.get(addedBy);
+      userRef = person.userName;
+    } catch (error) {
+      // continue
+    }
+    logger.debug(`added to new room by ${userRef}`);
+    logger.debug({ message: `action=add roomId=${bot.room.id} team=${bot.isTeam} moderated=${bot.isLocked} email=${userRef}`, labels: { type: 'event' } });
     // addedBy is the ID of the user who just added our bot to a new space,
     if (bot.room.type === 'group') {
       if (bot.isTeam) {
