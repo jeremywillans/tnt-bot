@@ -153,7 +153,7 @@ if (config.webhookUrl) {
 
   // Start Express Server
   server = app.listen(config.port, () => {
-    logger.debug(`Framework listening on port ${config.port}`);
+    logger.info(`Framework listening on port ${config.port}`);
   });
 }
 
